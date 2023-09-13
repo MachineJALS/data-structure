@@ -2,50 +2,63 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 )
 
-type zapato struct {
+type Zapato struct {
 	marca  string
 	precio float64
 	talla  int
 }
 
-func new_zapato() zapato {
+func newZapato() (Zapato, error) {
 	inputHandler := bufio.NewReader(os.Stdin)
-	fmt.Println("Digite la marca del zapato: ")
+	fmt.Print("Digite la marca del zapato: ")
 	marca, err := inputHandler.ReadString('\n')
 	if err != nil {
-		return zapato{}
+		return Zapato{}, err
 	}
-	fmt.Println("Digite el precio del zapato: ")
-	precio, err := fmt.Scanf("%f", &precio)
+	marca = strings.TrimSuffix(marca, "\n")
+
+	fmt.Print("Digite el precio del zapato: ")
+	var precio float64
+	_, err = fmt.Scanf("%f", &precio)
 	if err != nil {
-		return zapato{}
+		return Zapato{}, err
 	}
 
-	fmt.Println("Digite la talla del zapato: ")
-	talla := talla_disponible()
+	fmt.Print("Digite la talla del zapato: ")
 
-	z := zapato{marca: marca, precio: precio, talla: talla}
-	return z
+	var talla int
+	_, err = fmt.Scan(&talla)
+	if err != nil {
+		return Zapato{}, err
+	}
+
+	if tallaDisponible(talla) {
+		return Zapato{}, errors.New("Talla no disponible")
+	}
+
+	return Zapato{marca: marca, precio: precio, talla: talla}, nil
 }
 
-func talla_disponible() int {
-	fmt.Println("Digite la talla del zapato: ")
-	talla, _ := fmt.Scan()
-	if talla <= 44 || talla >= 34 {
-		return talla
-	} else {
-		talla_disponible()
-	}
+func tallaDisponible(talla int) bool {
+	return (talla <= 44 || talla >= 34)
 }
 
 func main() {
-	zapatos := [5]zapato{}
+	zapatos := []Zapato{}
 	for i := 0; i < 5; i++ {
-		zapatos[i] = new_zapato()
+		zapato, err := newZapato()
+		if err != nil {
+			i--
+			fmt.Println(err)
+			continue // NOTE: código de mierda, ni lo voy a probar
+		}
+		zapatos = append(zapatos, zapato)
 	}
 	for i := 0; i < 5; i++ {
 		fmt.Println(zapatos[i])
